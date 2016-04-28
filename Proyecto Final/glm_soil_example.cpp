@@ -1,12 +1,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "glut.h"
-#include "glm/glm.h"
 #include "soil/SOIL.h"
+#include "glm/glm.h"
+
 #include <math.h>
 
+
+GLuint tex1;
+GLuint tex2;
+GLuint tex3;
+GLfloat p1 = 0;
+GLfloat p2 = 0;
+GLfloat p3 = 0;
+
 struct Limite{
-	float left=-2, right=2, bottom = -2.5,top=1.5;
+	float left=-2, right=2, bottom = -2,top=2;
 	
 	Limite(float a, float b, float c, float d) : left(a),right(b),bottom(c),top(d){
 
@@ -55,6 +64,8 @@ struct Player {
 	void mostrar() {
 		glLoadIdentity();
 		glTranslatef(x, y, z);
+		glRotatef(90, 0, 1, 0);
+		glScalef(0.2, 0.2, 0.2);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 	}
 
@@ -64,8 +75,6 @@ struct Player {
 
 Player player;
 Limite limites;
-
-GLuint tex1;
 GLfloat ang=0;
 GLfloat movx = 0.015;
 GLfloat movy = 0.01;
@@ -86,12 +95,25 @@ void Init()
 {
 	glClearColor(1,1,1,1);
 	glEnable(GL_DEPTH_TEST);
-
+	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
 
 	player.ajustarLimite(limites);
 	player.model = glmReadOBJ("SpaceShip.obj");
+	tex1 = SOIL_load_OGL_texture(
+		"tex1.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO 
+	);
+
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
 void Display()
@@ -99,6 +121,8 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glMatrixMode(GL_MODELVIEW);
+
+	glClearDepth(1.0f);
 
 	if (press_a) {
 		player.mover(-movx, 0);
@@ -113,8 +137,32 @@ void Display()
 		player.mover(0, -movy);
 	}
 
+	glDisable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	player.mostrar();
 	
+	glEnable(GL_TEXTURE_2D);
+	//Parallax
+	glLoadIdentity();
+	
+	//glColor3f(1, 0, 0);
+	p1 -= 0.001f;
+	glBindTexture(GL_TEXTURE_2D, tex1);
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(-2.0 + p1, 0);
+	glVertex3f(2, 2, 0);
+
+	glTexCoord2f(0 + p1, 0);
+	glVertex3f(-2, 2, 0);
+
+	glTexCoord2f(0 + p1, -1.0);
+	glVertex3f(-2, -2, 0);
+
+	glTexCoord2f(-2.0 + p1, -1.0);
+	glVertex3f(2, -2, 0);
+	glEnd();
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
