@@ -35,7 +35,7 @@ struct Limite{
 };
 
 struct Player {
-	float x=0, y=0, z = 0;
+	float x=0, y=0, z = 1;
 	Limite lim = lim.construir( 2.0f,-2.0f,2.0f,-2.0f );
 	GLMmodel *model;
 
@@ -72,6 +72,54 @@ struct Player {
 
 };
 
+void Parallax() {
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0.4);
+
+	glLoadIdentity();
+
+
+	p1 -= 0.001f;
+	glBindTexture(GL_TEXTURE_2D, tex1);
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(-2.0 + p1, 0);
+	glVertex3f(2, 2, -2);
+
+	glTexCoord2f(0 + p1, 0);
+	glVertex3f(-2, 2, -2);
+
+	glTexCoord2f(0 + p1, -1.0);
+	glVertex3f(-2, -2, -2);
+
+	glTexCoord2f(-2.0 + p1, -1.0);
+	glVertex3f(2, -2, -2);
+	glEnd();
+
+	//2
+	glLoadIdentity();
+
+	p2 -= 0.0015f;
+	glBindTexture(GL_TEXTURE_2D, tex2);
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(-2.0 + p2, 0);
+	glVertex3f(2, 2, -1);
+
+	glTexCoord2f(0 + p2, 0);
+	glVertex3f(-2, 2, -1);
+
+	glTexCoord2f(0 + p2, -1.0);
+	glVertex3f(-2, -2, -1);
+
+	glTexCoord2f(-2.0 + p2, -1.0);
+	glVertex3f(2, -2, -1);
+	glEnd();
+
+	glDisable(GL_ALPHA_TEST);
+}
+
 
 Player player;
 Limite limites;
@@ -94,13 +142,17 @@ void keyboard ( unsigned char key, int x, int y );
 void Init()
 {
 	glClearColor(1,1,1,1);
+	glEnable(GL_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
 
+
+
 	player.ajustarLimite(limites);
 	player.model = glmReadOBJ("SpaceShip.obj");
+	
 	tex1 = SOIL_load_OGL_texture(
 		"tex1.png",
 		SOIL_LOAD_AUTO,
@@ -108,12 +160,26 @@ void Init()
 		SOIL_FLAG_POWER_OF_TWO 
 	);
 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	tex2 = SOIL_load_OGL_texture(
+		"tex2.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+
 }
 
 void Display()
@@ -121,8 +187,6 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glMatrixMode(GL_MODELVIEW);
-
-	glClearDepth(1.0f);
 
 	if (press_a) {
 		player.mover(-movx, 0);
@@ -140,29 +204,11 @@ void Display()
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	player.mostrar();
+
+
+	Parallax();
+
 	
-	glEnable(GL_TEXTURE_2D);
-	//Parallax
-	glLoadIdentity();
-	
-	//glColor3f(1, 0, 0);
-	p1 -= 0.001f;
-	glBindTexture(GL_TEXTURE_2D, tex1);
-
-	glBegin(GL_QUADS);
-	glTexCoord2f(-2.0 + p1, 0);
-	glVertex3f(2, 2, 0);
-
-	glTexCoord2f(0 + p1, 0);
-	glVertex3f(-2, 2, 0);
-
-	glTexCoord2f(0 + p1, -1.0);
-	glVertex3f(-2, -2, 0);
-
-	glTexCoord2f(-2.0 + p1, -1.0);
-	glVertex3f(2, -2, 0);
-	glEnd();
-
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
