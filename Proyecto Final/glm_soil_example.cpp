@@ -51,11 +51,14 @@ struct Disparo {
 
 	void mostrar() {
 		if (activo) {
+			glDisable(GL_LIGHTING);
+			glDisable(GL_LIGHT0);
 			glLoadIdentity();
 			glColor3f(0.0, 1.0, 0.0);
 			glTranslatef(x, y, z);
 			glScalef(1, 0.3, 0.3);
 			glutSolidCube(0.5);
+			
 		}
 	}
 
@@ -104,23 +107,26 @@ struct Player {
 	}
 
 	void mostrar() {
-		glLoadIdentity();
-		glColor3f(1.0, 1.0, 1.0);
-		glTranslatef(x, y, z);
-		glRotatef(90, 0, 1, 0);
-		glScalef(0.2, 0.2, 0.2);
-		//glDisable(GL_TEXTURE_2D);
-		//glutSolidCube(1);
-
-		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
-		glLoadIdentity();
 		
+		glLoadIdentity();
+		glDisable(GL_TEXTURE_2D);
 		for (int i = 0;i < disparos.size();i++) {
 			disparos[i].mover(mov_disparos);
 			disparos[i].mostrar();
 		}
-		//glEnable(GL_TEXTURE_2D);
+		glEnable(GL_TEXTURE_2D);
 
+		glLoadIdentity();
+		glColor3f(1.0, 1.0, 1.0);
+		glTranslatef(x, y, z);
+		glRotatef(90, 0, 1, 0);
+		glScalef(0.1, 0.1, 0.1);
+		//glDisable(GL_TEXTURE_2D);
+		//glutSolidCube(1);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
+		glLoadIdentity();
 	}
 
 	void disparar() {
@@ -133,8 +139,6 @@ struct Player {
 
 
 };
-
-
 
 
 struct Player player;
@@ -167,7 +171,7 @@ void Init()
 
 	GLfloat lDiff[] = { 1.0f,1.0f,1.0f,1.0f };
 	GLfloat lSpec[] = { 1.0f,1.0f,1.0f,1.0f };
-	GLfloat lpos[] = { 0.5,8.5,0.0,1 };
+	GLfloat lpos[] = { 0.0,2.5,0.0,1 };
 
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpec);
@@ -195,7 +199,7 @@ void Init()
 	);
 
 
-	player.model = glmReadOBJ("SpaceShip.obj");
+	player.model = glmReadOBJ("base_samus_ship.obj");
 	glutReportErrors();
 }
 
@@ -208,16 +212,7 @@ void Parallax() {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.4);
-
-	//glShadeModel(GL_SMOOTH);
-
-	GLfloat mDiff[] = { 0.5f,0.5f,0.5f,1.0f };
-	GLfloat mSpec[] = { 0.5f,0.5f,0.5f,1.0f };
-
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mDiff);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mSpec);
-	//glMaterialf(GL_FRONT, GL_SHININESS, 30);
+	glAlphaFunc(GL_NOTEQUAL, 0);
 
 	glColor3f(1.0, 1.0, 1.0);
 
@@ -312,13 +307,13 @@ void Display()
 			player.disparar();
 
 		}
+
 	}
 
 
 	//glDisable(GL_TEXTURE_2D);
 	//glBindTexture(GL_TEXTURE_2D, 0);
 	player.mostrar();
-
 	
 	glutSwapBuffers();
 	glutPostRedisplay();
