@@ -111,6 +111,7 @@ struct Player {
 		glScalef(0.2, 0.2, 0.2);
 		//glDisable(GL_TEXTURE_2D);
 		//glutSolidCube(1);
+
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 		
@@ -118,7 +119,8 @@ struct Player {
 			disparos[i].mover(mov_disparos);
 			disparos[i].mostrar();
 		}
-		glEnable(GL_TEXTURE_2D);
+		//glEnable(GL_TEXTURE_2D);
+
 	}
 
 	void disparar() {
@@ -162,19 +164,27 @@ void Init()
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
+
+	GLfloat lDiff[] = { 1.0f,1.0f,1.0f,1.0f };
+	GLfloat lSpec[] = { 1.0f,1.0f,1.0f,1.0f };
+	GLfloat lpos[] = { 0.5,8.5,0.0,1 };
+
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpec);
+	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
 	
 	tex1 = SOIL_load_OGL_texture(
 		"tex1.png",
 		SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_INVERT_Y
+		SOIL_FLAG_POWER_OF_TWO
 	);
 
 	tex2 = SOIL_load_OGL_texture(
 		"tex2.png",
 		SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_INVERT_Y
+		SOIL_FLAG_POWER_OF_TWO
 	);
 
 	tex3 = SOIL_load_OGL_texture(
@@ -186,6 +196,7 @@ void Init()
 
 
 	player.model = glmReadOBJ("SpaceShip.obj");
+	glutReportErrors();
 }
 
 void Parallax() {
@@ -199,11 +210,14 @@ void Parallax() {
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.4);
 
-	GLfloat mDiff[] = { 1.0f,1.0f,1.0f,1.0f };
-	GLfloat mSpec[] = { 1.0f,1.0f,1.0f,1.0f };
+	//glShadeModel(GL_SMOOTH);
+
+	GLfloat mDiff[] = { 0.5f,0.5f,0.5f,1.0f };
+	GLfloat mSpec[] = { 0.5f,0.5f,0.5f,1.0f };
 
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mDiff);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mSpec);
+	//glMaterialf(GL_FRONT, GL_SHININESS, 30);
 
 	glColor3f(1.0, 1.0, 1.0);
 
@@ -296,6 +310,7 @@ void Display()
 			//Puede disparar de nuevo
 			shoot_time = time;
 			player.disparar();
+
 		}
 	}
 
