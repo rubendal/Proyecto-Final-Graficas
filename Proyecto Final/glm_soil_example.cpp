@@ -13,6 +13,7 @@ GLfloat p1 = 0;
 GLfloat p2 = 0;
 GLfloat p3 = 0;
 GLfloat mov_disparos = 0.03;
+GLfloat ammo_length = 4.0f;
 
 struct Limite{
 	float left=-2, right=2, bottom = -2,top=2;
@@ -56,7 +57,7 @@ struct Disparo {
 			glLoadIdentity();
 			glColor3f(0.0, 1.0, 0.0);
 			glTranslatef(x, y, z);
-			glScalef(1, 0.3, 0.3);
+			glScalef(0.5, 0.2, 0.2);
 			glutSolidCube(0.5);
 			
 		}
@@ -133,7 +134,9 @@ struct Player {
 		if (municiones > 0) {
 			disparos.push_back(Disparo(x,y));
 			municiones--;
-			printf("Municiones: %d\n", municiones);
+			ammo_length = ammo_length - (4.0/100.0);
+			printf("Ammo length: %f\n", ammo_length);
+			
 		}
 	}
 
@@ -199,7 +202,7 @@ void Init()
 	);
 
 
-	player.model = glmReadOBJ("base_samus_ship.obj");
+	player.model = glmReadOBJ("ship.obj");
 	glutReportErrors();
 }
 
@@ -286,6 +289,16 @@ void Display()
 	glMatrixMode(GL_MODELVIEW);
 
 	Parallax();
+
+	glLoadIdentity();
+	glBegin(GL_QUADS);
+
+	glVertex3f(-2,1.95,2);
+	glVertex3f(-2,1.825,2);
+	glVertex3f(-2+ammo_length, 1.825, 2);
+	glVertex3f(-2+ammo_length, 1.95, 2);
+
+	glEnd();
 
 	if (press_a) {
 		player.mover(-movx, 0);
