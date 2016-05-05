@@ -101,7 +101,7 @@ struct Asteroide {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int hp = 5;
-	float r = 0.3;
+	float r = 0.2;
 	int appear = 0;
 	GLMmodel *model;
 	float material[4] = {1.0f,1.0f,1.0f,1.0f };
@@ -130,7 +130,7 @@ struct Asteroide {
 
 		glLoadIdentity();
 		glEnable(GL_TEXTURE_2D);
-
+		
 		glLoadIdentity();
 		glColor3f(1.0, 1.0, 1.0);
 		glTranslatef(x, y, z);
@@ -139,6 +139,7 @@ struct Asteroide {
 		//glutSolidCube(1);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 	}
@@ -484,6 +485,8 @@ void Display()
 		}
 	}
 
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
 	for (int i = 0;i < asteroides.size();i++) {
 		if (asteroides[i].activo) {
 			if (time > asteroides[i].appear) {
@@ -498,7 +501,13 @@ void Display()
 			}
 		}
 	}
+	GLfloat lDiff2[] = { 1.0f,1.0f,1.0f,1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff2);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+	GLfloat mat[] = { 1.0f,1.0f,1.0f,1.0f };
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
 
 
 
