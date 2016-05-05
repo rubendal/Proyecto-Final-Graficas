@@ -14,6 +14,20 @@ GLfloat p2 = 0;
 GLfloat p3 = 0;
 GLfloat mov_disparos = 0.03;
 GLfloat ammo_length = 4.0f;
+GLint time = 0;
+GLint prev_time = 0;
+GLMmodel *asteroideModel;
+
+bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
+	float dx = x - x2;
+	float dy = y - y2;
+	float d = sqrt((dx*dx) + (dy*dy));
+	return d < r + r2;
+}
+
+GLint deltaTime() {
+	return time - prev_time;
+}
 
 struct Limite{
 	float left=-2, right=2, bottom = -2,top=2;
@@ -35,16 +49,112 @@ struct Limite{
 	}
 };
 
+struct Powerup {
+	float x = 0, y = 0, z = 1;
+	int hpup = 0;
+	int municionup = 70;
+	int appear = 0;
+	bool activo = true;
+	float r = 0.3;
+
+	Powerup() {
+
+	}
+
+	Powerup(float a, float b, int h, int m, int ms): x(a), y(b), hpup(h), municionup(m), appear(ms) {
+
+	}
+
+	void mover(float n) {
+		x -= n*deltaTime();
+		if (x < -3.0) {
+			activo = false;
+		}
+	}
+
+	void mostrar() {
+		if (activo) {
+			glDisable(GL_LIGHTING);
+			glDisable(GL_LIGHT0);
+			glLoadIdentity();
+			glColor3f(0.0, 1.0, 1.0);
+			glTranslatef(x, y, z);
+			glutSolidCube(0.3);
+
+		}
+	}
+};
+
+
+
+struct Enemigo {
+	float x = 0, y = 0, z = 1;
+	bool activo = true;
+	int hp = 5;
+	float r = 1;
+	int appear = 0;
+
+
+};
+
+struct Asteroide {
+	float x = 0, y = 0, z = 1;
+	bool activo = true;
+	int hp = 5;
+	float r = 0.3;
+	int appear = 0;
+	GLMmodel *model;
+	float material[4] = {1.0f,1.0f,1.0f,1.0f };
+
+	Asteroide() {
+
+	}
+
+	Asteroide(float a, float b, int ms,GLMmodel *m) : x(a), y(b), appear(ms),model(m) {
+
+	}
+
+	void mover(float n) {
+		x -= n*deltaTime();
+		if (x < -3) {
+			activo = false;
+		}
+	}
+
+	void reducirMaterial() {
+		material[1] -= 0.2;
+		material[2] -= 0.2;
+	}
+
+	void mostrar() {
+
+		glLoadIdentity();
+		glEnable(GL_TEXTURE_2D);
+
+		glLoadIdentity();
+		glColor3f(1.0, 1.0, 1.0);
+		glTranslatef(x, y, z);
+		glScalef(0.4, 0.4, 0.4);
+		//glDisable(GL_TEXTURE_2D);
+		//glutSolidCube(1);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
+		glLoadIdentity();
+	}
+};
+
 struct Disparo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int daño = 1;
+	float r = 0.5;
 
-	Disparo(float px, float py) : x(px), y(py){
+	Disparo(float px, float py) : x(px), y(py) {
 
 	}
 	void mover(GLfloat m) {
-		x += m;
+		x += m* deltaTime();
 		if (x > 2 + 2) {
 			activo = false;
 		}
@@ -59,20 +169,32 @@ struct Disparo {
 			glTranslatef(x, y, z);
 			glScalef(0.5, 0.2, 0.2);
 			glutSolidCube(0.5);
-			
+
 		}
 	}
 
 	void calcularColision(struct Enemigo &enemigo) {
-		
+
+	}
+
+	void calcularColision(struct Asteroide &enemigo) {
+		if (enemigo.activo) {
+			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+				enemigo.hp--;
+				if (enemigo.hp == 0) {
+					enemigo.activo = false;
+				}
+				else {
+					enemigo.reducirMaterial();
+				}
+				activo = false;
+			}
+		}
 	}
 };
 
-struct Enemigo {
-	float x = 0, y = 0, z = 1;
-	bool activo = true;
-	int hp = 5;
-};
+std::vector<Powerup> powerups;
+std::vector<Asteroide> asteroides;
 
 struct Player {
 	float x=0, y=0, z = 1;
@@ -81,10 +203,11 @@ struct Player {
 	int hp = 100;
 	int municiones = 100;
 	std::vector<Disparo> disparos;
+	float r = 1;
 
 	void mover(float a, float b) {
-		x += a;
-		y += b;
+		x += a * deltaTime();
+		y += b* deltaTime();
 		if (x < lim.left) {
 			x = lim.left;
 		}
@@ -134,9 +257,41 @@ struct Player {
 		if (municiones > 0) {
 			disparos.push_back(Disparo(x,y));
 			municiones--;
-			ammo_length = ammo_length - (4.0/100.0);
+			ammo_length = municiones * (4.0/100.0);
 			printf("Ammo length: %f\n", ammo_length);
 			
+		}
+	}
+
+	void calcularColision(struct Enemigo &enemigo) {
+		if (enemigo.activo) {
+			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+				//-hp al jugador
+			}
+		}
+	}
+
+	void calcularColision(struct Asteroide &enemigo) {
+		if (enemigo.activo) {
+			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+				if (enemigo.activo) {
+					exit(1); //Muere el jugador
+				}
+			}
+		}
+	}
+
+	void calcularColision(struct Powerup &powerup) {
+		if (powerup.activo) {
+			if (colisionan(x, y, r, powerup.x, powerup.y, powerup.r)) {
+				powerup.activo = false;
+				municiones += powerup.municionup;
+				ammo_length = municiones * (4.0 / 100.0);
+				hp += powerup.hpup;
+				printf("Powerup obtenido\n");
+			}else{
+			
+			}
 		}
 	}
 
@@ -145,10 +300,11 @@ struct Player {
 
 
 struct Player player;
+
 GLfloat ang=0;
 GLfloat movx = 0.015;
 GLfloat movy = 0.01;
-GLint shoot_wait = 400;
+GLint shoot_wait = 100;
 GLint shoot_time = -1; //ms ultima vez que disparo
 
 bool press_a = false;
@@ -203,6 +359,13 @@ void Init()
 
 
 	player.model = glmReadOBJ("ship.obj");
+	asteroideModel = glmReadOBJ("Asteroid.obj");
+
+	powerups.push_back(Powerup(4, 1, 0, 70, 9000));
+
+	asteroides.push_back(Asteroide(4, 1, 4000,asteroideModel));
+	asteroides.push_back(Asteroide(4, -0.4, 13000, asteroideModel));
+
 	glutReportErrors();
 }
 
@@ -217,11 +380,13 @@ void Parallax() {
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_NOTEQUAL, 0);
 
+	glDisable(GL_LIGHTING);
+
 	glColor3f(1.0, 1.0, 1.0);
 
 	glLoadIdentity();
 
-	p1 -= 0.001f;
+	p1 -= 0.001f* deltaTime();
 	glBindTexture(GL_TEXTURE_2D, tex1);
 
 	glBegin(GL_QUADS);
@@ -241,7 +406,7 @@ void Parallax() {
 	//2
 	glLoadIdentity();
 
-	p2 -= 0.0015f;
+	p2 -= 0.0015f * deltaTime();
 	glBindTexture(GL_TEXTURE_2D, tex2);
 
 	glBegin(GL_QUADS);
@@ -261,7 +426,7 @@ void Parallax() {
 	//3
 	glLoadIdentity();
 
-	p3 -= 0.002f;
+	p3 -= 0.002f* deltaTime();
 	glBindTexture(GL_TEXTURE_2D, tex3);
 
 	glBegin(GL_QUADS);
@@ -288,17 +453,54 @@ void Display()
 
 	glMatrixMode(GL_MODELVIEW);
 
+	prev_time = time;
+	time = glutGet(GLUT_ELAPSED_TIME);
+
 	Parallax();
 
 	glLoadIdentity();
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBegin(GL_QUADS);
+	glColor3f(1.0, 0, 0);
 
-	glVertex3f(-2,1.95,2);
-	glVertex3f(-2,1.825,2);
-	glVertex3f(-2+ammo_length, 1.825, 2);
-	glVertex3f(-2+ammo_length, 1.95, 2);
+	glVertex3f(0,1.95,2);
+	glVertex3f(0,1.825,2);
+	glVertex3f(0+ammo_length/2, 1.825, 2);
+	glVertex3f(0+ammo_length/2, 1.95, 2);
 
 	glEnd();
+
+	glEnable(GL_LIGHTING);
+
+
+
+	for (int i = 0;i < powerups.size();i++) {
+		if (powerups[i].activo) {
+			if (time > powerups[i].appear) {
+				powerups[i].mover(0.0003);
+				powerups[i].mostrar();
+				player.calcularColision(powerups[i]);
+			}
+		}
+	}
+
+	for (int i = 0;i < asteroides.size();i++) {
+		if (asteroides[i].activo) {
+			if (time > asteroides[i].appear) {
+				asteroides[i].mover(0.0003);
+				asteroides[i].mostrar();
+				player.calcularColision(asteroides[i]);
+				for (int n = 0;n < player.disparos.size();n++) {
+					if (player.disparos[n].activo) {
+						player.disparos[n].calcularColision(asteroides[i]);
+					}
+				}
+			}
+		}
+	}
+
+
+
 
 	if (press_a) {
 		player.mover(-movx, 0);
@@ -313,7 +515,6 @@ void Display()
 		player.mover(0, -movy);
 	}
 	if (press_space) {
-		GLint time = glutGet(GLUT_ELAPSED_TIME);
 		if (time > shoot_time + shoot_wait) {
 			//Puede disparar de nuevo
 			shoot_time = time;
