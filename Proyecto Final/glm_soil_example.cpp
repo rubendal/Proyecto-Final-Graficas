@@ -49,13 +49,15 @@ struct Limite{
 	}
 };
 
+struct Limite limites;
+
 struct Powerup {
 	float x = 0, y = 0, z = 1;
 	int hpup = 0;
 	int municionup = 70;
 	int appear = 0;
 	bool activo = true;
-	float r = 0.3;
+	float r = 0.2;
 
 	Powerup() {
 
@@ -67,7 +69,7 @@ struct Powerup {
 
 	void mover(float n) {
 		x -= n*deltaTime();
-		if (x < -3.0) {
+		if (x < limites.left - 1) {
 			activo = false;
 		}
 	}
@@ -116,7 +118,7 @@ struct Asteroide {
 
 	void mover(float n) {
 		x -= n*deltaTime();
-		if (x < -3) {
+		if (x < limites.left - 1) {
 			activo = false;
 		}
 	}
@@ -135,8 +137,6 @@ struct Asteroide {
 		glColor3f(1.0, 1.0, 1.0);
 		glTranslatef(x, y, z);
 		glScalef(0.4, 0.4, 0.4);
-		//glDisable(GL_TEXTURE_2D);
-		//glutSolidCube(1);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
@@ -156,7 +156,7 @@ struct Disparo {
 	}
 	void mover(GLfloat m) {
 		x += m* deltaTime();
-		if (x > 2 + 2) {
+		if (x > limites.right + 1) {
 			activo = false;
 		}
 	}
@@ -199,9 +199,11 @@ std::vector<Asteroide> asteroides;
 
 struct Player {
 	float x=0, y=0, z = 1;
-	struct Limite lim = Limite( -2.0f,2.0f,-2.0f,2.0f );
+	//struct Limite limites = Limite( -2.0f,2.0f,-2.0f,2.0f );
 	GLMmodel *model;
 	int hp = 100;
+	const int max_hp = 100;
+	const int max_municiones = 100;
 	int municiones = 100;
 	std::vector<Disparo> disparos;
 	float r = 1;
@@ -209,26 +211,19 @@ struct Player {
 	void mover(float a, float b) {
 		x += a * deltaTime();
 		y += b* deltaTime();
-		if (x < lim.left) {
-			x = lim.left;
+		if (x < limites.left) {
+			x = limites.left;
 		}
-		if (x > lim.right) {
-			x = lim.right;
+		if (x > limites.right) {
+			x = limites.right;
 		}
-		if (y < lim.bottom) {
-			y = lim.bottom;
+		if (y < limites.bottom) {
+			y = limites.bottom;
 		}
-		if (y > lim.top) {
-			y = lim.top;
+		if (y > limites.top) {
+			y = limites.top;
 		}
 		
-	}
-
-	void ajustarLimite(struct Limite &limite) {
-		lim.bottom = limite.bottom;
-		lim.top = limite.top;
-		lim.left = limite.left;
-		lim.right = limite.right;
 	}
 
 	void mostrar() {
@@ -258,7 +253,7 @@ struct Player {
 		if (municiones > 0) {
 			disparos.push_back(Disparo(x,y));
 			municiones--;
-			ammo_length = municiones * (4.0/100.0);
+			ammo_length = municiones * (limites.right/100.0);
 			printf("Ammo length: %f\n", ammo_length);
 			
 		}
@@ -287,8 +282,14 @@ struct Player {
 			if (colisionan(x, y, r, powerup.x, powerup.y, powerup.r)) {
 				powerup.activo = false;
 				municiones += powerup.municionup;
-				ammo_length = municiones * (4.0 / 100.0);
+				if (municiones > max_municiones) {
+					municiones = max_municiones;
+				}
+				ammo_length = municiones * (limites.right / 100.0);
 				hp += powerup.hpup;
+				if (hp > max_hp) {
+					hp = max_hp;
+				}
 				printf("Powerup obtenido\n");
 			}else{
 			
@@ -358,7 +359,6 @@ void Init()
 		SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_INVERT_Y 
 	);
 
-
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
 
@@ -366,6 +366,8 @@ void Init()
 
 	asteroides.push_back(Asteroide(4, 1, 4000,asteroideModel));
 	asteroides.push_back(Asteroide(4, -0.4, 13000, asteroideModel));
+
+	ammo_length = limites.right * 2;
 
 	glutReportErrors();
 }
@@ -392,16 +394,16 @@ void Parallax() {
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(-1.0 + p1, 0);
-	glVertex3f(2, 2, -2);
+	glVertex3f(limites.right, limites.top, -2);
 
 	glTexCoord2f(0 + p1, 0);
-	glVertex3f(-2, 2, -2);
+	glVertex3f(limites.left, limites.top, -2);
 
 	glTexCoord2f(0 + p1, -1.0);
-	glVertex3f(-2, -2, -2);
+	glVertex3f(limites.left, limites.bottom, -2);
 
 	glTexCoord2f(-1.0 + p1, -1.0);
-	glVertex3f(2, -2, -2);
+	glVertex3f(limites.right, limites.bottom, -2);
 	glEnd();
 
 	//2
@@ -412,16 +414,16 @@ void Parallax() {
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(-1.0 + p2, 0);
-	glVertex3f(2, 2, -1);
+	glVertex3f(limites.right, limites.top, -2);
 
 	glTexCoord2f(0 + p2, 0);
-	glVertex3f(-2, 2, -1);
+	glVertex3f(limites.left, limites.top, -2);
 
 	glTexCoord2f(0 + p2, -1.0);
-	glVertex3f(-2, -2, -1);
+	glVertex3f(limites.left, limites.bottom, -2);
 
 	glTexCoord2f(-1.0 + p2, -1.0);
-	glVertex3f(2, -2, -1);
+	glVertex3f(limites.right, limites.bottom, -2);
 	glEnd();
 
 	//3
@@ -432,16 +434,16 @@ void Parallax() {
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(-1.0 + p3, 0);
-	glVertex3f(2, 2, 0);
+	glVertex3f(limites.right, limites.top, -2);
 
 	glTexCoord2f(0 + p3, 0);
-	glVertex3f(-2, 2, 0);
+	glVertex3f(limites.left, limites.top, -2);
 
 	glTexCoord2f(0 + p3, -1.0);
-	glVertex3f(-2, -2, 0);
+	glVertex3f(limites.left, limites.bottom, -2);
 
 	glTexCoord2f(-1.0 + p3, -1.0);
-	glVertex3f(2, -2, 0);
+	glVertex3f(limites.right, limites.bottom, -2);
 	glEnd();
 
 
@@ -457,6 +459,7 @@ void Display()
 	prev_time = time;
 	time = glutGet(GLUT_ELAPSED_TIME);
 
+	glEnable(GL_TEXTURE_2D);
 	Parallax();
 
 	glLoadIdentity();
@@ -464,10 +467,10 @@ void Display()
 	glBegin(GL_QUADS);
 	glColor3f(1.0, 0, 0);
 
-	glVertex3f(0,1.95,2);
-	glVertex3f(0,1.825,2);
-	glVertex3f(0+ammo_length/2, 1.825, 2);
-	glVertex3f(0+ammo_length/2, 1.95, 2);
+	glVertex3f(0,limites.top - 0.05f,2);
+	glVertex3f(0,limites.top - 0.175f,2);
+	glVertex3f(0+ammo_length, limites.top - 0.175f, 2);
+	glVertex3f(0+ammo_length, limites.top - 0.05f, 2);
 
 	glEnd();
 
@@ -586,8 +589,8 @@ void Reshape(int w, int h)
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);  
 	glLoadIdentity();             
-
-	glOrtho(-2, 2, -2, 2, -10, 10);
+	limites = Limite(-4.0f, 4.0f, -4.0f, 4.0f);
+	glOrtho(limites.left, limites.right, limites.bottom, limites.top, -10, 10);
 }
 
 
