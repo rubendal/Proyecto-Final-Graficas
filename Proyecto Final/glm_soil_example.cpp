@@ -14,6 +14,7 @@ GLfloat p2 = 0;
 GLfloat p3 = 0;
 GLfloat mov_disparos = 0.03;
 GLfloat ammo_length = 4.0f;
+GLfloat hp_length = 4.0f;
 GLint time = 0;
 GLint prev_time = 0;
 GLint tiempo_nivel = 30000;
@@ -300,7 +301,7 @@ struct Player {
 		if (municiones > 0) {
 			disparos.push_back(Disparo(x,y));
 			municiones--;
-			ammo_length = municiones * (limites.right/100.0);
+			ammo_length = municiones * (limites.right/max_municiones);
 			printf("Ammo length: %f\n", ammo_length);
 			
 		}
@@ -309,7 +310,12 @@ struct Player {
 	void calcularColision(struct Enemigo &enemigo) {
 		if (enemigo.activo) {
 			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
-				//-hp al jugador
+				hp -= 25;
+				hp_length = hp * (limites.right / max_hp);
+				if (hp <= 0) {
+					hp = 0;
+					exit(1);
+				}
 			}
 		}
 	}
@@ -318,7 +324,14 @@ struct Player {
 		if (enemigo.activo) {
 			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
 				if (enemigo.activo) {
-					exit(1); //Muere el jugador
+					//exit(1); //Muere el jugador
+					hp -= 25;
+					hp_length = hp * (limites.right / max_hp);
+					if (hp <= 0) {
+						hp = 0;
+						exit(1);
+					}
+					enemigo.activo = false;
 				}
 			}
 		}
@@ -332,12 +345,14 @@ struct Player {
 				if (municiones > max_municiones) {
 					municiones = max_municiones;
 				}
-				ammo_length = municiones * (limites.right / 100.0);
+				ammo_length = municiones * (limites.right / max_municiones);
 				hp += powerup.hpup;
 				if (hp > max_hp) {
 					hp = max_hp;
 				}
+				hp_length = hp * (limites.right / max_hp);
 				score += 100;
+				printf("Score: %d\n", score);
 				printf("Powerup obtenido\n");
 			}else{
 			
@@ -420,6 +435,7 @@ void Init()
 	asteroides.push_back(Asteroide(4, -2, time + 18000, asteroideModel, 0.2));
 
 	ammo_length = limites.right * 2;
+	hp_length = limites.right * 2;
 
 	glutReportErrors();
 }
@@ -517,12 +533,24 @@ void Display()
 	glLoadIdentity();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBegin(GL_QUADS);
-	glColor3f(1.0, 0, 0);
+	glColor3f(0, 0, 1.0);
 
 	glVertex3f(0,limites.top - 0.05f,2);
-	glVertex3f(0,limites.top - 0.175f,2);
-	glVertex3f(0+ammo_length, limites.top - 0.175f, 2);
+	glVertex3f(0,limites.top - (limites.top / 10.0f),2);
+	glVertex3f(0+ammo_length, limites.top - (limites.top / 10.0f), 2);
 	glVertex3f(0+ammo_length, limites.top - 0.05f, 2);
+
+	glEnd();
+
+	glLoadIdentity();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBegin(GL_QUADS);
+	glColor3f(1.00, 0, 0);
+
+	glVertex3f(0, limites.bottom - 0.05f, 2);
+	glVertex3f(0, limites.bottom - (limites.bottom / 10.0f), 2);
+	glVertex3f(0 + hp_length, limites.bottom - (limites.bottom / 10.0f), 2);
+	glVertex3f(0 + hp_length, limites.bottom - 0.05f, 2);
 
 	glEnd();
 
@@ -605,16 +633,16 @@ void Display()
 }
 
 void keyboard ( unsigned char key, int x, int y ){
-	if (key == 'a') {
+	if (key == 'a' || key == 'A') {
 		press_a = true;
 	}
-	if (key == 'd') {
+	if (key == 'd' || key == 'D') {
 		press_d = true;
 	}
-	if (key == 'w') {
+	if (key == 'w' || key == 'W') {
 		press_w = true;
 	}
-	if (key == 's') {
+	if (key == 's' || key == 'S') {
 		press_s = true;
 	}
 	if (key == ' ') {
@@ -625,16 +653,16 @@ void keyboard ( unsigned char key, int x, int y ){
 }
 
 void keyboardup(unsigned char key, int x, int y) {
-	if (key == 'a') {
+	if (key == 'a' || key == 'A') {
 		press_a = false;
 	}
-	if (key == 'd') {
+	if (key == 'd' || key == 'D') {
 		press_d = false;
 	}
-	if (key == 'w') {
+	if (key == 'w' || key == 'W') {
 		press_w = false;
 	}
-	if (key == 's') {
+	if (key == 's' || key == 'S') {
 		press_s = false;
 	}
 	if (key == ' ') {

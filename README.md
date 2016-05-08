@@ -1,10 +1,7 @@
-## Cosas que hacer
+﻿## Cosas que hacer
 
 * Habrá naves enemigas que disparan. Las naves enemigos son modelos 3d con
 iluminación y textura
-
-* Hay una barra de vida. La barra de vida disminuye cuando un enemigo te
-dispara
 
 * Las naves enemigas serán eliminadas al recibir 5 disparos. Usando
 materiales se debe mostrar el nivel de daño que tiene la nave enemiga
@@ -62,3 +59,6 @@ municiones. El jugador recolecta el powerup tocando el ícono con la nave
 
 * Deben aparecer en el escenario powerups que te aumentan los puntos de
 vida. El jugador los recolecta tocándolos (ya esta implementado pero aun no hay powerups de hp, pero se pueden hacer, tambien se pueden hacer powerups que den puntos de vida y municiones)
+
+* Hay una barra de vida. La barra de vida disminuye cuando un enemigo te
+dispara
