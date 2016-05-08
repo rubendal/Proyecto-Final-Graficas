@@ -16,6 +16,8 @@ GLfloat mov_disparos = 0.03;
 GLfloat ammo_length = 4.0f;
 GLint time = 0;
 GLint prev_time = 0;
+GLint tiempo_nivel = 30000;
+GLint score = 0;
 GLMmodel *asteroideModel;
 
 bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
@@ -93,10 +95,30 @@ struct Enemigo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int hp = 5;
-	float r = 1;
+	float r = 0.14;
 	int appear = 0;
+	GLMmodel *model;
+	float material[4] = { 1.0f,1.0f,1.0f,1.0f };
 
+	Enemigo() {
 
+	}
+
+	Enemigo(float a, float b, int ms, GLMmodel *m) : x(a), y(b), appear(ms), model(m) {
+
+	}
+
+	void mover(float n) {
+		x -= n*deltaTime();
+		if (x < limites.left - 1) {
+			activo = false;
+		}
+	}
+
+	void reducirMaterial() {
+		material[1] -= 0.2;
+		material[2] -= 0.2;
+	}
 };
 
 struct Asteroide {
@@ -107,19 +129,22 @@ struct Asteroide {
 	int appear = 0;
 	GLMmodel *model;
 	float material[4] = {1.0f,1.0f,1.0f,1.0f };
+	GLfloat rot = 0;
 
 	Asteroide() {
 
 	}
 
-	Asteroide(float a, float b, int ms,GLMmodel *m) : x(a), y(b), appear(ms),model(m) {
+	Asteroide(float a, float b, int ms,GLMmodel *m, float r2) : x(a), y(b), appear(ms),model(m),r(r2) {
 
 	}
 
 	void mover(float n) {
-		x -= n*deltaTime();
-		if (x < limites.left - 1) {
-			activo = false;
+		if (activo) {
+			x -= n*deltaTime();
+			if (x < limites.left - 1) {
+				activo = false;
+			}
 		}
 	}
 
@@ -136,13 +161,17 @@ struct Asteroide {
 		glLoadIdentity();
 		glColor3f(1.0, 1.0, 1.0);
 		glTranslatef(x, y, z);
-		glScalef(0.4, 0.4, 0.4);
+		rot += 0.2;
+		glRotatef(rot, 1, 1, 1);
+		glScalef(r, r, r);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 	}
+
+
 };
 
 struct Disparo {
@@ -175,7 +204,19 @@ struct Disparo {
 	}
 
 	void calcularColision(struct Enemigo &enemigo) {
-
+		if (enemigo.activo) {
+			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+				enemigo.hp--;
+				if (enemigo.hp == 0) {
+					enemigo.activo = false;
+					score += 3000;
+				}
+				else {
+					enemigo.reducirMaterial();
+				}
+				activo = false;
+			}
+		}
 	}
 
 	void calcularColision(struct Asteroide &enemigo) {
@@ -184,6 +225,7 @@ struct Disparo {
 				enemigo.hp--;
 				if (enemigo.hp == 0) {
 					enemigo.activo = false;
+					score += 2000;
 				}
 				else {
 					enemigo.reducirMaterial();
@@ -196,6 +238,7 @@ struct Disparo {
 
 std::vector<Powerup> powerups;
 std::vector<Asteroide> asteroides;
+std::vector<Enemigo> enemigos;
 
 struct Player {
 	float x=0, y=0, z = 1;
@@ -207,6 +250,8 @@ struct Player {
 	int municiones = 100;
 	std::vector<Disparo> disparos;
 	float r = 1;
+	GLfloat rotx = 0;
+	GLfloat roty = 0;
 
 	void mover(float a, float b) {
 		x += a * deltaTime();
@@ -240,6 +285,8 @@ struct Player {
 		glColor3f(1.0, 1.0, 1.0);
 		glTranslatef(x, y, z);
 		glRotatef(90, 0, 1, 0);
+		glRotatef(rotx, 1, 0, 0);
+		glRotatef(roty, 0, 0, 1);
 		glScalef(0.1, 0.1, 0.1);
 		//glDisable(GL_TEXTURE_2D);
 		//glutSolidCube(1);
@@ -290,6 +337,7 @@ struct Player {
 				if (hp > max_hp) {
 					hp = max_hp;
 				}
+				score += 100;
 				printf("Powerup obtenido\n");
 			}else{
 			
@@ -362,10 +410,14 @@ void Init()
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
 
-	powerups.push_back(Powerup(4, 1, 0, 70, 9000));
+	time = glutGet(GLUT_ELAPSED_TIME);
 
-	asteroides.push_back(Asteroide(4, 1, 4000,asteroideModel));
-	asteroides.push_back(Asteroide(4, -0.4, 13000, asteroideModel));
+	powerups.push_back(Powerup(4, 1, 0, 70, time + 9000));
+
+	asteroides.push_back(Asteroide(4, 1, time + 4000,asteroideModel,0.3));
+	asteroides.push_back(Asteroide(4, -0.4, time + 13000, asteroideModel,0.4));
+	asteroides.push_back(Asteroide(4, 0, time + 15000, asteroideModel, 0.2));
+	asteroides.push_back(Asteroide(4, -2, time + 18000, asteroideModel, 0.2));
 
 	ammo_length = limites.right * 2;
 
@@ -513,17 +565,24 @@ void Display()
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
 
 
+	player.rotx = 0;
+	player.roty = 0;
+
 
 	if (press_a) {
+		player.rotx = -15;
 		player.mover(-movx, 0);
 	}
 	if (press_d) {
+		player.roty += 15;
 		player.mover(movx, 0);
 	}
 	if (press_w) {
+		player.roty = -25;
 		player.mover(0, movy);
 	}
 	if (press_s) {
+		player.roty += 25;
 		player.mover(0, -movy);
 	}
 	if (press_space) {
