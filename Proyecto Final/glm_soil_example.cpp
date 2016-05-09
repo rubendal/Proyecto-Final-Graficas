@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include "glut.h"
 #include "soil/SOIL.h"
 #include "glm/glm.h"
@@ -15,10 +16,11 @@ GLfloat p3 = 0;
 GLfloat mov_disparos = 0.03;
 GLfloat ammo_length = 4.0f;
 GLfloat hp_length = 4.0f;
-GLint time = 0;
+GLint tiempo = 0;
 GLint prev_time = 0;
 GLint tiempo_nivel = 30000;
 GLint score = 0;
+GLint time_begin = 0;
 GLMmodel *asteroideModel;
 
 bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
@@ -28,8 +30,20 @@ bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
 	return d < r + r2;
 }
 
+bool colisionan(float x, float y, float rx, float ry, float x2, float y2, float rx2, float ry2) {
+	float dx = x - x2;
+	float dy = y - y2;
+	float d = sqrt((dx*dx) + (dy*dy));
+	return d < rx + rx2 || d < ry + ry2;
+}
+
+float random(int min, int max) {
+	float x = (float)rand() / (float)(RAND_MAX);
+	return min + (x * (max-min));
+}
+
 GLint deltaTime() {
-	return time - prev_time;
+	return tiempo - prev_time;
 }
 
 struct Limite{
@@ -60,7 +74,7 @@ struct Powerup {
 	int municionup = 70;
 	int appear = 0;
 	bool activo = true;
-	float r = 0.2;
+	float r = 0.3;
 
 	Powerup() {
 
@@ -82,9 +96,11 @@ struct Powerup {
 			glDisable(GL_LIGHTING);
 			glDisable(GL_LIGHT0);
 			glLoadIdentity();
-			glColor3f(0.0, 1.0, 1.0);
+			float m = municionup > 0 ? 1.0 : 0;
+			float h = hpup > 0 ? 1.0 : 0;
+			glColor3f(h, 0, m);
 			glTranslatef(x, y, z);
-			glutSolidCube(0.3);
+			glutSolidCube(r);
 
 		}
 	}
@@ -179,7 +195,8 @@ struct Disparo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int daño = 1;
-	float r = 0.5;
+	float rx = 0.4;
+	float ry = 0.2;
 
 	Disparo(float px, float py) : x(px), y(py) {
 
@@ -206,7 +223,7 @@ struct Disparo {
 
 	void calcularColision(struct Enemigo &enemigo) {
 		if (enemigo.activo) {
-			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.r, enemigo.r)) {
 				enemigo.hp--;
 				if (enemigo.hp == 0) {
 					enemigo.activo = false;
@@ -222,7 +239,7 @@ struct Disparo {
 
 	void calcularColision(struct Asteroide &enemigo) {
 		if (enemigo.activo) {
-			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.r, enemigo.r)) {
 				enemigo.hp--;
 				if (enemigo.hp == 0) {
 					enemigo.activo = false;
@@ -370,6 +387,7 @@ GLfloat ang=0;
 GLfloat movx = 0.015;
 GLfloat movy = 0.01;
 GLint shoot_wait = 100;
+GLint time_fin = 0;
 GLint shoot_time = -1; //ms ultima vez que disparo
 
 bool press_a = false;
@@ -428,17 +446,26 @@ void Init()
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
 
-	time = glutGet(GLUT_ELAPSED_TIME);
+	time_begin = glutGet(GLUT_ELAPSED_TIME);
 
-	powerups.push_back(Powerup(4, 1, 0, 70, time + 9000));
+	srand(time(NULL));
 
-	asteroides.push_back(Asteroide(4, 1, time + 4000,asteroideModel,0.3));
-	asteroides.push_back(Asteroide(4, -0.4, time + 13000, asteroideModel,0.4));
-	asteroides.push_back(Asteroide(4, 0, time + 15000, asteroideModel, 0.2));
-	asteroides.push_back(Asteroide(4, -2, time + 18000, asteroideModel, 0.2));
+	powerups.push_back(Powerup(4, random(limites.bottom,limites.top), 0, 70, time_begin + 9000));
+	powerups.push_back(Powerup(4, random(limites.bottom, limites.top), 50, 0, time_begin + 18000));
+
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 4000,asteroideModel,0.3));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 13000, asteroideModel,0.4));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 15000, asteroideModel, 0.2));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 18000, asteroideModel, 0.2));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 19000, asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 22000, asteroideModel, 0.5));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 24000, asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 27000, asteroideModel, 0.4));
 
 	ammo_length = limites.right * 2;
 	hp_length = limites.right * 2;
+
+	time_fin = time_begin + tiempo_nivel;
 
 	glutReportErrors();
 }
@@ -531,116 +558,131 @@ void Parallax() {
 	glDisable(GL_ALPHA_TEST);
 }
 
+GLfloat vel_asteroide = 0.0003;
+
 void Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
 
-	prev_time = time;
-	time = glutGet(GLUT_ELAPSED_TIME);
+	prev_time = tiempo;
+	tiempo = glutGet(GLUT_ELAPSED_TIME);
 
-	glEnable(GL_TEXTURE_2D);
-	Parallax();
+	if (tiempo - time_begin >= time_fin) {
+		printf("Terminaste el nivel\n");
+	}
+	else {
 
-	glLoadIdentity();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBegin(GL_QUADS);
-	glColor3f(0, 0, 1.0);
+		if (tiempo - time_begin >= time_fin / 2) {
+			vel_asteroide = 0.0009;
+		}
+		else if (tiempo - time_begin >= time_fin * 2 / 3) {
+			vel_asteroide = 0.002;
+		}
 
-	glVertex3f(0,limites.top - 0.05f,2);
-	glVertex3f(0,limites.top - (limites.top / 10.0f),2);
-	glVertex3f(0+ammo_length, limites.top - (limites.top / 10.0f), 2);
-	glVertex3f(0+ammo_length, limites.top - 0.05f, 2);
+		glEnable(GL_TEXTURE_2D);
+		Parallax();
 
-	glEnd();
+		glLoadIdentity();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBegin(GL_QUADS);
+		glColor3f(0, 0, 1.0);
 
-	glLoadIdentity();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBegin(GL_QUADS);
-	glColor3f(1.00, 0, 0);
+		glVertex3f(0, limites.top - 0.05f, 2);
+		glVertex3f(0, limites.top - (limites.top / 10.0f), 2);
+		glVertex3f(0 + ammo_length, limites.top - (limites.top / 10.0f), 2);
+		glVertex3f(0 + ammo_length, limites.top - 0.05f, 2);
 
-	glVertex3f(0, limites.bottom - 0.05f, 2);
-	glVertex3f(0, limites.bottom - (limites.bottom / 10.0f), 2);
-	glVertex3f(0 + hp_length, limites.bottom - (limites.bottom / 10.0f), 2);
-	glVertex3f(0 + hp_length, limites.bottom - 0.05f, 2);
+		glEnd();
 
-	glEnd();
+		glLoadIdentity();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBegin(GL_QUADS);
+		glColor3f(1.00, 0, 0);
 
-	glEnable(GL_LIGHTING);
+		glVertex3f(0, limites.bottom - 0.05f, 2);
+		glVertex3f(0, limites.bottom - (limites.bottom / 10.0f), 2);
+		glVertex3f(0 + hp_length, limites.bottom - (limites.bottom / 10.0f), 2);
+		glVertex3f(0 + hp_length, limites.bottom - 0.05f, 2);
+
+		glEnd();
+
+		glEnable(GL_LIGHTING);
 
 
 
-	for (int i = 0;i < powerups.size();i++) {
-		if (powerups[i].activo) {
-			if (time > powerups[i].appear) {
-				powerups[i].mover(0.0003);
-				powerups[i].mostrar();
-				player.calcularColision(powerups[i]);
+		for (int i = 0;i < powerups.size();i++) {
+			if (powerups[i].activo) {
+				if (tiempo - time_begin > powerups[i].appear) {
+					powerups[i].mover(0.0006);
+					powerups[i].mostrar();
+					player.calcularColision(powerups[i]);
+				}
 			}
 		}
-	}
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-	for (int i = 0;i < asteroides.size();i++) {
-		if (asteroides[i].activo) {
-			if (time > asteroides[i].appear) {
-				asteroides[i].mover(0.0003);
-				asteroides[i].mostrar();
-				player.calcularColision(asteroides[i]);
-				for (int n = 0;n < player.disparos.size();n++) {
-					if (player.disparos[n].activo) {
-						player.disparos[n].calcularColision(asteroides[i]);
+		for (int i = 0;i < asteroides.size();i++) {
+			if (asteroides[i].activo) {
+				if (tiempo - time_begin > asteroides[i].appear) {
+					asteroides[i].mover(vel_asteroide);
+					asteroides[i].mostrar();
+					player.calcularColision(asteroides[i]);
+					for (int n = 0;n < player.disparos.size();n++) {
+						if (player.disparos[n].activo) {
+							player.disparos[n].calcularColision(asteroides[i]);
+						}
 					}
 				}
 			}
 		}
-	}
-	GLfloat lDiff2[] = { 1.0f,1.0f,1.0f,1.0f };
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff2);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		GLfloat lDiff2[] = { 1.0f,1.0f,1.0f,1.0f };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff2);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-	GLfloat mat[] = { 1.0f,1.0f,1.0f,1.0f };
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
-
-
-	player.rotx = 0;
-	player.roty = 0;
+		GLfloat mat[] = { 1.0f,1.0f,1.0f,1.0f };
+		glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
 
 
-	if (press_a) {
-		player.rotx = -15;
-		player.mover(-movx, 0);
-	}
-	if (press_d) {
-		player.roty += 15;
-		player.mover(movx, 0);
-	}
-	if (press_w) {
-		player.roty = -25;
-		player.mover(0, movy);
-	}
-	if (press_s) {
-		player.roty += 25;
-		player.mover(0, -movy);
-	}
-	if (press_space) {
-		if (time > shoot_time + shoot_wait) {
-			//Puede disparar de nuevo
-			shoot_time = time;
-			player.disparar();
+		player.rotx = 0;
+		player.roty = 0;
+
+
+		if (press_a) {
+			player.rotx = -15;
+			player.mover(-movx, 0);
+		}
+		if (press_d) {
+			player.roty += 15;
+			player.mover(movx, 0);
+		}
+		if (press_w) {
+			player.roty = -25;
+			player.mover(0, movy);
+		}
+		if (press_s) {
+			player.roty += 25;
+			player.mover(0, -movy);
+		}
+		if (press_space) {
+			if (tiempo > shoot_time + shoot_wait) {
+				//Puede disparar de nuevo
+				shoot_time = tiempo;
+				player.disparar();
+
+			}
 
 		}
 
+
+		//glDisable(GL_TEXTURE_2D);
+		//glBindTexture(GL_TEXTURE_2D, 0);
+		player.mostrar();
+
 	}
-
-
-	//glDisable(GL_TEXTURE_2D);
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	player.mostrar();
-	
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
