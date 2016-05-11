@@ -1,14 +1,5 @@
 ﻿## Cosas que hacer
 
-* Habrá naves enemigas que disparan. Las naves enemigos son modelos 3d con
-iluminación y textura
-
-* Las naves enemigas serán eliminadas al recibir 5 disparos. Usando
-materiales se debe mostrar el nivel de daño que tiene la nave enemiga
-
-* Se debe llevar un registro de los enemigos matados en forma de un score en
-pantalla. El score debe ser en texto. (glutbitmapcharacter)
-
 * El juego debe tener una pantalla de inicio donde se muestren los controles
 básicos y se espere a que el usuario apriete una tecla para comenzar.
 
@@ -27,6 +18,9 @@ incremental (Faltan los enemigos)
 * Al llegar al final del nivel se debe mostrar una pantalla de “Ganaste” (Se detecta el final del nivel con el tiempo transcurrido)
 
 * Si la vida del jugador llega a 0 se mostrará una pantalla de “Game Over”. (falta pantalla de game over)
+
+* Habrá naves enemigas que disparan. Las naves enemigos son modelos 3d con
+iluminación y textura (tienen que disparar)
 
 ## Con errores/problemas
 
@@ -61,3 +55,9 @@ vida. El jugador los recolecta tocándolos
 
 * Hay una barra de vida. La barra de vida disminuye cuando un enemigo te
 dispara
+
+* Las naves enemigas serán eliminadas al recibir 5 disparos. Usando
+materiales se debe mostrar el nivel de daño que tiene la nave enemiga
+
+* Se debe llevar un registro de los enemigos matados en forma de un score en
+pantalla. El score debe ser en texto. (glutbitmapcharacter)
