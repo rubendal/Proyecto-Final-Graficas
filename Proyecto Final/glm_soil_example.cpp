@@ -13,6 +13,7 @@ GLuint tex2;
 GLuint tex3;
 GLuint tex4;
 GLuint tex5;
+GLuint tex6;
 GLfloat p1 = 0;
 GLfloat p2 = 0;
 GLfloat p3 = 0;
@@ -27,6 +28,7 @@ GLint time_begin = 0;
 GLMmodel *asteroideModel;
 GLMmodel *enemigoModel;
 bool noPerdido = true;
+bool pantInit = true;
 
 bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
 	float dx = x - x2;
@@ -600,6 +602,13 @@ void Init()
 		SOIL_FLAG_POWER_OF_TWO
 		);
 
+	tex6 = SOIL_load_OGL_texture(
+		"pantalla3.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+		);
+
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
 	enemigoModel = glmReadOBJ("rtm_metroid_v2.obj");
@@ -737,7 +746,11 @@ void Display()
 	prev_time = tiempo;
 	tiempo = glutGet(GLUT_ELAPSED_TIME);
 
-	if (tiempo - time_begin >= time_fin) {
+	if (pantInit) {
+
+		pantallas(tex6);
+
+	} else if (tiempo - time_begin >= time_fin) {
 		
 		pantallas(tex4);
 
@@ -906,6 +919,7 @@ void keyboard ( unsigned char key, int x, int y ){
 	}
 	if (key == ' ') {
 		press_space = true;
+		pantInit = false;
 	}
 
 	
