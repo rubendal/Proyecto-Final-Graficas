@@ -109,7 +109,36 @@ struct Powerup {
 	}
 };
 
+struct DisparoEnemigo {
+	float x = 0, y = 0, z = 1;
+	bool activo = true;
+	int daño = 1;
+	float r = 0.2;
 
+	DisparoEnemigo(float px, float py) : x(px), y(py) {
+
+	}
+
+	void mover(GLfloat m) {
+		x -= m*deltaTime();
+		if (x < limites.left + 1) {
+			activo = false;
+		}
+	}
+
+	void mostrar() {
+		if (activo) {
+			glDisable(GL_LIGHTING);
+			glDisable(GL_LIGHT0);
+			glDisable(GL_LIGHT1);
+			glLoadIdentity();
+			glColor3f(0.0, 0.0, 1.0);
+			glTranslatef(x, y, z);
+			glScalef(0.5, 0.2, 0.2);
+			glutSolidCube(0.5);
+		}
+	}
+};
 
 struct Enemigo {
 	float x = 0, y = 0, z = 1;
@@ -119,6 +148,7 @@ struct Enemigo {
 	int appear = 0;
 	GLMmodel *model;
 	float material[4] = { 1.0f,1.0f,1.0f,1.0f };
+	std::vector<DisparoEnemigo> disparos;
 
 	Enemigo() {
 
@@ -143,6 +173,11 @@ struct Enemigo {
 	void mostrar() {
 
 		glLoadIdentity();
+		glDisable(GL_TEXTURE_2D);
+		for (int i = 0; i < disparos.size(); i++) {
+			disparos[i].mover(mov_disparos);
+			disparos[i].mostrar();
+		}
 		glEnable(GL_TEXTURE_2D);
 
 		glLoadIdentity();
@@ -158,6 +193,10 @@ struct Enemigo {
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, material);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
+	}
+
+	void disparar() {
+			disparos.push_back(DisparoEnemigo(x, y));
 	}
 };
 
@@ -278,6 +317,7 @@ struct Disparo {
 			}
 		}
 	}
+
 };
 
 std::vector<Powerup> powerups;
@@ -401,6 +441,18 @@ struct Player {
 			
 			}
 		}
+	}
+
+	void calcularColision(struct DisparoEnemigo &enemigo) {
+		if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+			hp -= 25;
+			hp_length = hp * (limites.right / max_hp);
+			if (hp <= 0) {
+				hp = 0;
+				exit(1);
+			}
+		}
+
 	}
 
 
@@ -693,6 +745,7 @@ void Display()
 				if (tiempo - time_begin > enemigos[i].appear) {
 					enemigos[i].mover(vel_asteroide);
 					enemigos[i].mostrar();
+					enemigos[i].disparar();
 					player.calcularColision(enemigos[i]);
 					for (int n = 0; n < player.disparos.size(); n++) {
 						if (player.disparos[n].activo) {
