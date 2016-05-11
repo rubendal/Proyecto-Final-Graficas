@@ -1,17 +1,17 @@
 ﻿## Cosas que hacer
 
-* El juego debe tener una pantalla de inicio donde se muestren los controles
-básicos y se espere a que el usuario apriete una tecla para comenzar.
-
+Nada
 
 ## Incompletos
 
 * Se deben calcular colisiones entre la nave y los asteroides usando Bounding
-Spheres. Si la nave choca con un asteroide el juego termina (Reemplazar exit() con pantalla de game over)
+Spheres. Si la nave choca con un asteroide el juego termina 
 
-* Al llegar al final del nivel se debe mostrar una pantalla de “Ganaste” (Se detecta el final del nivel con el tiempo transcurrido)
+* Al llegar al final del nivel se debe mostrar una pantalla de “Ganaste” 
 
-* Si la vida del jugador llega a 0 se mostrará una pantalla de “Game Over”. (falta pantalla de game over)
+* Si la vida del jugador llega a 0 se mostrará una pantalla de “Game Over”. 
+
+En estas pantallas hay que mostrar el score
 
 
 ## Con errores/problemas
@@ -64,3 +64,6 @@ incremental
 las coordenadas de textura.
 
 * Deben existir por lo menos 3 luces en el escenario.
+
+* El juego debe tener una pantalla de inicio donde se muestren los controles
+básicos y se espere a que el usuario apriete una tecla para comenzar.

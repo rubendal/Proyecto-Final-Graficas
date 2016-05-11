@@ -49,6 +49,10 @@ float random(int min, int max) {
 	return min + (x * (max-min));
 }
 
+int randomTime(int max) {
+	return ((rand() * 1000) + 2000) % max;
+}
+
 GLint deltaTime() {
 	return tiempo - prev_time;
 }
@@ -500,6 +504,7 @@ bool press_w = false;
 bool press_s = false;
 bool press_d = false;
 bool press_space = false;
+bool press_enter = false;
 
 
 void Init();
@@ -617,29 +622,145 @@ void Init()
 
 	srand(time(NULL));
 
-	powerups.push_back(Powerup(4, random(limites.bottom,limites.top), 0, 70, time_begin + 9000));
-	powerups.push_back(Powerup(4, random(limites.bottom, limites.top), 50, 0, time_begin + 18000));
+	powerups.push_back(Powerup(limites.right +3, random(limites.bottom,limites.top), 0, 70, time_begin + randomTime(tiempo_nivel - 5000)));
+	powerups.push_back(Powerup(limites.right +3, random(limites.bottom, limites.top), 50, 0, time_begin + randomTime(tiempo_nivel - 5000)));
 
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 4000,asteroideModel,0.3));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 13000, asteroideModel,0.4));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 15000, asteroideModel, 0.2));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 18000, asteroideModel, 0.2));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 19000, asteroideModel, 0.3));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 22000, asteroideModel, 0.5));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 24000, asteroideModel, 0.3));
-	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 27000, asteroideModel, 0.4));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000),asteroideModel,0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), asteroideModel,0.4));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), asteroideModel, 0.5));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), asteroideModel, 0.4));
 
-	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 8000, enemigoModel));
-	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 16000, enemigoModel));
-	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 23000, enemigoModel));
-	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 28000, enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel-5000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), time_begin + randomTime(tiempo_nivel - 5000), enemigoModel));
 
 	ammo_length = limites.right * 2;
 	hp_length = limites.right * 2;
 
 	time_fin = time_begin + tiempo_nivel;
 
+	player.x = limites.left/2;
+	player.y = 0;
+	player.z = 1;
+
 	glutReportErrors();
+}
+
+void Reiniciar() {
+	enemigos.clear();
+	powerups.clear();
+	asteroides.clear();
+	score = 0;
+	Init();
+}
+
+void NuevoNivel() {
+	int prev_nivel = tiempo_nivel;
+	tiempo_nivel += 20000;
+
+
+	for (int n = 0;n < enemigos.size();n++) {
+		enemigos[n].activo = true;
+		enemigos[n].x = limites.right+1;
+		enemigos[n].hp = 5;
+		enemigos[n].material[0] = 1.0f;
+		enemigos[n].material[1] = 1.0f;
+		enemigos[n].material[2] = 1.0f;
+		enemigos[n].material[3] = 1.0f;
+	}
+	for (int n = 0;n < asteroides.size();n++) {
+		asteroides[n].activo = true;
+		asteroides[n].x = limites.right + 0.5;
+		asteroides[n].hp = 5;
+		asteroides[n].material[0] = 1.0f;
+		asteroides[n].material[1] = 1.0f;
+		asteroides[n].material[2] = 1.0f;
+		asteroides[n].material[3] = 1.0f;
+	}
+	for (int n = 0;n < powerups.size();n++) {
+		powerups[n].activo = true;
+		powerups[n].x = limites.right + 0.5;
+	}
+
+	tex1 = SOIL_load_OGL_texture(
+		"tex1.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
+
+	tex2 = SOIL_load_OGL_texture(
+		"tex2.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
+
+
+	tex3 = SOIL_load_OGL_texture(
+		"tex3.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_INVERT_Y
+	);
+
+	tex4 = SOIL_load_OGL_texture(
+		"pantalla2.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
+
+	tex5 = SOIL_load_OGL_texture(
+		"pantalla1.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
+
+	tex6 = SOIL_load_OGL_texture(
+		"pantalla3.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+	);
+
+	srand(time(NULL));
+
+	powerups.push_back(Powerup(limites.right +3, random(limites.bottom, limites.top), 0, 70, prev_nivel + randomTime(15000)));
+	powerups.push_back(Powerup(limites.right +3, random(limites.bottom, limites.top), 50, 0, prev_nivel + randomTime(15000)));
+
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.4));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.2));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.2));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.5));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.3));
+	asteroides.push_back(Asteroide(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), asteroideModel, 0.4));
+
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), enemigoModel));
+	enemigos.push_back(Enemigo(limites.right +3, random(limites.bottom, limites.top), prev_nivel + randomTime(15000), enemigoModel));
+	
+	player.hp = 100;
+	player.municiones = 100;
+
+	ammo_length = limites.right * 2;
+	hp_length = limites.right * 2;
+
+	time_begin = glutGet(GLUT_ELAPSED_TIME);
+	time_fin = time_begin + tiempo_nivel;
+
+	player.x = limites.left / 2;
+	player.y = 0;
+	player.z = 1;
+	
+
 }
 
 void Parallax() {
@@ -750,9 +871,19 @@ void Display()
 
 		pantallas(tex6);
 
-	} else if (tiempo - time_begin >= time_fin) {
-		
+	} else if (tiempo - time_begin >= time_fin && noPerdido) {
+		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 3);
+		std::string scoreString = "Score: " + std::to_string(score);
+		char *scoreString2 = new char[scoreString.length() + 1];
+		strcpy(scoreString2, scoreString.c_str());
+		for (int i = 0; scoreString2[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, scoreString2[i]);
+		}
+		delete[] scoreString2;
 		pantallas(tex4);
+		if (press_enter) {
+			NuevoNivel();
+		}
 
 	}
 	else if (noPerdido){
@@ -760,8 +891,11 @@ void Display()
 		if (tiempo - time_begin >= time_fin / 2) {
 			vel_asteroide = 0.001;
 		}
-		else if (tiempo - time_begin >= time_fin * 7 / 10) {
+		else if (tiempo - time_begin >= time_fin * 7 / 10 && time_fin < 50000) {
 			vel_asteroide = 0.003;
+		}
+		else if (tiempo - time_begin >= time_fin * 7 / 10 && time_fin >= 50000) {
+			vel_asteroide = 0.005;
 		}
 
 		glEnable(GL_TEXTURE_2D);
@@ -899,6 +1033,18 @@ void Display()
 
 	} else {
 		pantallas(tex5);
+		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 3);
+		std::string scoreString = "Score: " + std::to_string(score);
+		char *scoreString2 = new char[scoreString.length() + 1];
+		strcpy(scoreString2, scoreString.c_str());
+		for (int i = 0; scoreString2[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, scoreString2[i]);
+		}
+		delete[] scoreString2;
+		if (press_enter) {
+			Reiniciar();
+			noPerdido = true;
+		}
 	}
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -921,6 +1067,9 @@ void keyboard ( unsigned char key, int x, int y ){
 		press_space = true;
 		pantInit = false;
 	}
+	if (key == '\r' || key == '\n') {
+		press_enter = true;
+	}
 
 	
 }
@@ -940,6 +1089,9 @@ void keyboardup(unsigned char key, int x, int y) {
 	}
 	if (key == ' ') {
 		press_space = false;
+	}
+	if (key == '\r' || key == '\n') {
+		press_enter = false;
 	}
 
 }
