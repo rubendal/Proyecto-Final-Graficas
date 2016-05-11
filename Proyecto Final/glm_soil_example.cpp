@@ -6,6 +6,7 @@
 #include "glm/glm.h"
 #include <vector>
 #include <math.h>
+#include <string>
 
 GLuint tex1;
 GLuint tex2;
@@ -22,6 +23,7 @@ GLint tiempo_nivel = 30000;
 GLint score = 0;
 GLint time_begin = 0;
 GLMmodel *asteroideModel;
+GLMmodel *enemigoModel;
 
 bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
 	float dx = x - x2;
@@ -135,6 +137,24 @@ struct Enemigo {
 	void reducirMaterial() {
 		material[1] -= 0.2;
 		material[2] -= 0.2;
+	}
+
+	void mostrar() {
+
+		glLoadIdentity();
+		glEnable(GL_TEXTURE_2D);
+
+		glLoadIdentity();
+		glColor3f(1.0, 1.0, 1.0);
+		glTranslatef(x, y, z);
+		//rot += 0.2;
+		glRotatef(90, 0, -1, 0);
+		//glScalef(r, r, r);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
+		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
+		glLoadIdentity();
 	}
 };
 
@@ -325,19 +345,7 @@ struct Player {
 	}
 
 	void calcularColision(struct Enemigo &enemigo) {
-		if (enemigo.activo) {
-			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
-				hp -= 25;
-				hp_length = hp * (limites.right / max_hp);
-				if (hp <= 0) {
-					hp = 0;
-					exit(1);
-				}
-			}
-		}
-	}
 
-	void calcularColision(struct Asteroide &enemigo) {
 		if (enemigo.activo) {
 			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
 				if (enemigo.activo) {
@@ -349,6 +357,17 @@ struct Player {
 						exit(1);
 					}
 					enemigo.activo = false;
+				}
+			}
+		}
+
+	}
+
+	void calcularColision(struct Asteroide &enemigo) {
+		if (enemigo.activo) {
+			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+				if (enemigo.activo) {
+					exit(1);
 				}
 			}
 		}
@@ -445,6 +464,7 @@ void Init()
 
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
+	enemigoModel = glmReadOBJ("rtm_metroid_v2.obj");
 
 	time_begin = glutGet(GLUT_ELAPSED_TIME);
 
@@ -461,6 +481,8 @@ void Init()
 	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 22000, asteroideModel, 0.5));
 	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 24000, asteroideModel, 0.3));
 	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 27000, asteroideModel, 0.4));
+
+	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 8000, enemigoModel));
 
 	ammo_length = limites.right * 2;
 	hp_length = limites.right * 2;
@@ -608,6 +630,14 @@ void Display()
 
 		glEnd();
 
+		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 3);
+		std::string scoreString = "Score: " + std::to_string(score);
+		char *scoreString2 = new char[scoreString.length()+1];
+		strcpy(scoreString2, scoreString.c_str());
+		for (int i = 0; scoreString2[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, scoreString2[i]);
+		}
+		delete[] scoreString2;
 		glEnable(GL_LIGHTING);
 
 
@@ -638,6 +668,22 @@ void Display()
 				}
 			}
 		}
+
+		for (int i = 0; i < enemigos.size(); i++) {
+			if (enemigos[i].activo) {
+				if (tiempo - time_begin > enemigos[i].appear) {
+					enemigos[i].mover(vel_asteroide);
+					enemigos[i].mostrar();
+					player.calcularColision(enemigos[i]);
+					for (int n = 0; n < player.disparos.size(); n++) {
+						if (player.disparos[n].activo) {
+							player.disparos[n].calcularColision(enemigos[i]);
+						}
+					}
+				}
+			}
+		}
+
 		GLfloat lDiff2[] = { 1.0f,1.0f,1.0f,1.0f };
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff2);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
