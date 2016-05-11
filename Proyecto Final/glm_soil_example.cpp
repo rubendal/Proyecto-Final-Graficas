@@ -11,6 +11,8 @@
 GLuint tex1;
 GLuint tex2;
 GLuint tex3;
+GLuint tex4;
+GLuint tex5;
 GLfloat p1 = 0;
 GLfloat p2 = 0;
 GLfloat p3 = 0;
@@ -24,6 +26,7 @@ GLint score = 0;
 GLint time_begin = 0;
 GLMmodel *asteroideModel;
 GLMmodel *enemigoModel;
+bool noPerdido = true;
 
 bool colisionan(float x, float y, float r, float x2, float y2, float r2) {
 	float dx = x - x2;
@@ -414,12 +417,13 @@ struct Player {
 		if (enemigo.activo) {
 			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.rx, enemigo.ry)) {
 				if (enemigo.activo) {
-					//exit(1); //Muere el jugador
+					
 					hp -= 25;
 					hp_length = hp * (limites.right / max_hp);
 					if (hp <= 0) {
 						hp = 0;
-						exit(1);
+						//exit(1);
+						noPerdido = false;
 					}
 					enemigo.activo = false;
 				}
@@ -432,7 +436,8 @@ struct Player {
 		if (enemigo.activo) {
 			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.r,enemigo.r)) {
 				if (enemigo.activo) {
-					exit(1);
+					//exit(1);
+					noPerdido = false;
 				}
 			}
 		}
@@ -467,7 +472,8 @@ struct Player {
 			hp_length = hp * (limites.right / max_hp);
 			if (hp <= 0) {
 				hp = 0;
-				exit(1);
+				//exit(1);
+				noPerdido = false;
 			}
 			enemigo.activo = false;
 		}
@@ -498,6 +504,29 @@ void Init();
 void Display();
 void Reshape(int w, int h);
 void keyboard ( unsigned char key, int x, int y );
+
+void pantallas(GLuint texx) {
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glLoadIdentity();
+	glBindTexture(GL_TEXTURE_2D, texx);
+	glBegin(GL_QUADS);
+	glTexCoord2f(1, 0);
+	glVertex3f(limites.right, limites.top, -1);
+
+	glTexCoord2f(0, 0);
+	glVertex3f(limites.left, limites.top, -1);
+
+	glTexCoord2f(0, 1.0);
+	glVertex3f(limites.left, limites.bottom, -1);
+
+	glTexCoord2f(1, 1.0);
+	glVertex3f(limites.right, limites.bottom, -1);
+	glEnd();
+}
 
 void Init()
 {
@@ -557,6 +586,19 @@ void Init()
 		SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_INVERT_Y 
 	);
 
+	tex4 = SOIL_load_OGL_texture(
+		"pantalla2.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+		);
+
+	tex5 = SOIL_load_OGL_texture(
+		"pantalla1.png",
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_POWER_OF_TWO
+		);
 
 	player.model = glmReadOBJ("ship.obj");
 	asteroideModel = glmReadOBJ("Asteroid.obj");
@@ -696,9 +738,11 @@ void Display()
 	tiempo = glutGet(GLUT_ELAPSED_TIME);
 
 	if (tiempo - time_begin >= time_fin) {
-		printf("Terminaste el nivel\n");
+		
+		pantallas(tex4);
+
 	}
-	else {
+	else if (noPerdido){
 
 		if (tiempo - time_begin >= time_fin / 2) {
 			vel_asteroide = 0.001;
@@ -840,6 +884,8 @@ void Display()
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		player.mostrar();
 
+	} else {
+		pantallas(tex5);
 	}
 	glutSwapBuffers();
 	glutPostRedisplay();
