@@ -123,8 +123,8 @@ struct DisparoEnemigo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int daño = 10;
-	float rx = 0.3;
-	float ry = 0.07;
+	float rx = 0.1;
+	float ry = 0.05;
 
 	DisparoEnemigo(float px, float py) : x(px), y(py) {
 
@@ -156,8 +156,8 @@ struct Enemigo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int hp = 5;
-	float rx = 0.14;
-	float ry = 0.25;
+	float rx = 0.2;
+	float ry = 0.4;
 	int appear = 0;
 	GLMmodel *model;
 	float material[4] = { 1.0f,1.0f,1.0f,1.0f };
@@ -413,7 +413,7 @@ struct Player {
 			disparos.push_back(Disparo(x,y));
 			municiones--;
 			ammo_length = municiones * (limites.right/max_municiones);
-			printf("Ammo length: %f\n", ammo_length);
+			//printf("Ammo length: %f\n", ammo_length);
 			
 		}
 	}
@@ -464,8 +464,8 @@ struct Player {
 				}
 				hp_length = hp * (limites.right / max_hp);
 				score += 100;
-				printf("Score: %d\n", score);
-				printf("Powerup obtenido\n");
+				//printf("Score: %d\n", score);
+				//printf("Powerup obtenido\n");
 			}else{
 			
 			}
@@ -513,6 +513,7 @@ void Reshape(int w, int h);
 void keyboard ( unsigned char key, int x, int y );
 
 void pantallas(GLuint texx) {
+	glEnable(GL_TEXTURE_2D);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -670,6 +671,9 @@ void NuevoNivel() {
 		enemigos[n].material[1] = 1.0f;
 		enemigos[n].material[2] = 1.0f;
 		enemigos[n].material[3] = 1.0f;
+		enemigos[n].disparos.clear();
+		enemigos[n].ultimo_disparo = 0;
+		enemigos[n].tiempo_disparo -= 20;
 	}
 	for (int n = 0;n < asteroides.size();n++) {
 		asteroides[n].activo = true;
@@ -871,8 +875,13 @@ void Display()
 
 		pantallas(tex6);
 
-	} else if (tiempo - time_begin >= time_fin && noPerdido) {
-		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 3);
+	} else if (tiempo >= time_fin && noPerdido) {
+
+		pantallas(tex4);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_TEXTURE_2D);
+		glColor3f(1.00, 0, 0);
+		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 4);
 		std::string scoreString = "Score: " + std::to_string(score);
 		char *scoreString2 = new char[scoreString.length() + 1];
 		strcpy(scoreString2, scoreString.c_str());
@@ -880,7 +889,6 @@ void Display()
 			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, scoreString2[i]);
 		}
 		delete[] scoreString2;
-		pantallas(tex4);
 		if (press_enter) {
 			NuevoNivel();
 		}
@@ -888,13 +896,13 @@ void Display()
 	}
 	else if (noPerdido){
 
-		if (tiempo - time_begin >= time_fin / 2) {
+		if (tiempo  >= time_fin / 2) {
 			vel_asteroide = 0.001;
 		}
-		else if (tiempo - time_begin >= time_fin * 7 / 10 && time_fin < 50000) {
+		else if (tiempo >= time_fin * 7 / 10 && time_fin < 50000) {
 			vel_asteroide = 0.003;
 		}
-		else if (tiempo - time_begin >= time_fin * 7 / 10 && time_fin >= 50000) {
+		else if (tiempo >= time_fin * 7 / 10 && time_fin >= 50000) {
 			vel_asteroide = 0.005;
 		}
 
@@ -1032,7 +1040,10 @@ void Display()
 		player.mostrar();
 
 	} else {
-		pantallas(tex5);
+		glColor3f(1.00, 0, 0);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_TEXTURE_2D);
+
 		glRasterPos3f(limites.left + 0.25f, limites.top - 0.375f, 3);
 		std::string scoreString = "Score: " + std::to_string(score);
 		char *scoreString2 = new char[scoreString.length() + 1];
@@ -1041,6 +1052,7 @@ void Display()
 			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, scoreString2[i]);
 		}
 		delete[] scoreString2;
+		pantallas(tex5);
 		if (press_enter) {
 			Reiniciar();
 			noPerdido = true;
@@ -1065,10 +1077,11 @@ void keyboard ( unsigned char key, int x, int y ){
 	}
 	if (key == ' ') {
 		press_space = true;
-		pantInit = false;
+		
 	}
 	if (key == '\r' || key == '\n') {
 		press_enter = true;
+		pantInit = false;
 	}
 
 	
