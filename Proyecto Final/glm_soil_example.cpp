@@ -592,7 +592,7 @@ void Init()
 }
 
 void Parallax() {
-	
+
 	glEnable(GL_TEXTURE_2D);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -608,21 +608,21 @@ void Parallax() {
 
 	glLoadIdentity();
 
-	p1 += 0.001f* deltaTime();
+	p1 += 0.0004f* deltaTime();
 	glBindTexture(GL_TEXTURE_2D, tex1);
 
 	glBegin(GL_QUADS);
-	glTexCoord2f(1.0 + p1, 0);
-	glVertex3f(limites.right, limites.top, -2);
+	glTexCoord2f(0.5 + p1, 0);
+	glVertex3f(limites.right, limites.top, -3);
 
 	glTexCoord2f(0 + p1, 0);
-	glVertex3f(limites.left, limites.top, -2);
+	glVertex3f(limites.left, limites.top, -3);
 
 	glTexCoord2f(0 + p1, 1.0);
-	glVertex3f(limites.left, limites.bottom, -2);
+	glVertex3f(limites.left, limites.bottom, -3);
 
-	glTexCoord2f(1.0 + p1, 1.0);
-	glVertex3f(limites.right, limites.bottom, -2);
+	glTexCoord2f(0.5 + p1, 1.0);
+	glVertex3f(limites.right, limites.bottom, -3);
 	glEnd();
 
 	//2
@@ -633,11 +633,11 @@ void Parallax() {
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glLoadIdentity();
 
-	p2 += 0.0015f * deltaTime();
+	p2 += 0.00006f * deltaTime();
 	glBindTexture(GL_TEXTURE_2D, tex2);
 
 	glBegin(GL_QUADS);
-	glTexCoord2f(1.0 + p2, 0);
+	glTexCoord2f(0.5 + p2, 0);
 	glVertex3f(limites.right, limites.top, -2);
 
 	glTexCoord2f(0 + p2, 0);
@@ -646,7 +646,7 @@ void Parallax() {
 	glTexCoord2f(0 + p2, 1.0);
 	glVertex3f(limites.left, limites.bottom, -2);
 
-	glTexCoord2f(1.0 + p2, 1.0);
+	glTexCoord2f(0.5 + p2, 1.0);
 	glVertex3f(limites.right, limites.bottom, -2);
 	glEnd();
 
@@ -658,23 +658,28 @@ void Parallax() {
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glLoadIdentity();
 
-	p3 += 0.002f* deltaTime();
+	p3 += 0.00002f * deltaTime();
+
 	glBindTexture(GL_TEXTURE_2D, tex3);
 
 	glBegin(GL_QUADS);
-	glTexCoord2f(1.0 + p3, 0);
-	glVertex3f(limites.right, limites.top, -2);
+	glTexCoord2f(0.5 + p3, 0);
+	glVertex3f(limites.right, limites.top, -1);
 
 	glTexCoord2f(0 + p3, 0);
-	glVertex3f(limites.left, limites.top, -2);
+	glVertex3f(limites.left, limites.top, -1);
 
 	glTexCoord2f(0 + p3, 1.0);
-	glVertex3f(limites.left, limites.bottom, -2);
+	glVertex3f(limites.left, limites.bottom, -1);
 
-	glTexCoord2f(1.0 + p3, 1.0);
-	glVertex3f(limites.right, limites.bottom, -2);
+	glTexCoord2f(0.5 + p3, 1.0);
+	glVertex3f(limites.right, limites.bottom, -1);
 	glEnd();
-
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 	glDisable(GL_ALPHA_TEST);
 }
