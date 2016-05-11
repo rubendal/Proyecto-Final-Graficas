@@ -483,6 +483,9 @@ void Init()
 	asteroides.push_back(Asteroide(4, random(limites.bottom, limites.top), time_begin + 27000, asteroideModel, 0.4));
 
 	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 8000, enemigoModel));
+	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 16000, enemigoModel));
+	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 23000, enemigoModel));
+	enemigos.push_back(Enemigo(4, random(limites.bottom, limites.top), time_begin + 28000, enemigoModel));
 
 	ammo_length = limites.right * 2;
 	hp_length = limites.right * 2;
