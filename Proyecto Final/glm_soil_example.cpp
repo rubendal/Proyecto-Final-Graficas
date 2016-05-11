@@ -19,7 +19,7 @@ GLfloat ammo_length = 4.0f;
 GLfloat hp_length = 4.0f;
 GLint tiempo = 0;
 GLint prev_time = 0;
-GLint tiempo_nivel = 30000;
+GLint tiempo_nivel = 37000;
 GLint score = 0;
 GLint time_begin = 0;
 GLMmodel *asteroideModel;
@@ -112,8 +112,9 @@ struct Powerup {
 struct DisparoEnemigo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
-	int daño = 1;
-	float r = 0.2;
+	int daño = 10;
+	float rx = 0.3;
+	float ry = 0.07;
 
 	DisparoEnemigo(float px, float py) : x(px), y(py) {
 
@@ -121,7 +122,7 @@ struct DisparoEnemigo {
 
 	void mover(GLfloat m) {
 		x -= m*deltaTime();
-		if (x < limites.left + 1) {
+		if (x < limites.left - 1) {
 			activo = false;
 		}
 	}
@@ -132,7 +133,7 @@ struct DisparoEnemigo {
 			glDisable(GL_LIGHT0);
 			glDisable(GL_LIGHT1);
 			glLoadIdentity();
-			glColor3f(0.0, 0.0, 1.0);
+			glColor3f(1.0, 0.0, 0.0);
 			glTranslatef(x, y, z);
 			glScalef(0.5, 0.2, 0.2);
 			glutSolidCube(0.5);
@@ -144,11 +145,14 @@ struct Enemigo {
 	float x = 0, y = 0, z = 1;
 	bool activo = true;
 	int hp = 5;
-	float r = 0.14;
+	float rx = 0.14;
+	float ry = 0.25;
 	int appear = 0;
 	GLMmodel *model;
 	float material[4] = { 1.0f,1.0f,1.0f,1.0f };
 	std::vector<DisparoEnemigo> disparos;
+	int tiempo_disparo = 900;
+	int ultimo_disparo = 0;
 
 	Enemigo() {
 
@@ -195,8 +199,11 @@ struct Enemigo {
 		glLoadIdentity();
 	}
 
-	void disparar() {
+	void disparar(int time) {
+		if (time >= ultimo_disparo + tiempo_disparo) {
 			disparos.push_back(DisparoEnemigo(x, y));
+			ultimo_disparo = time;
+		}
 	}
 };
 
@@ -288,7 +295,7 @@ struct Disparo {
 
 	void calcularColision(struct Enemigo &enemigo) {
 		if (enemigo.activo) {
-			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.r, enemigo.r)) {
+			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.rx, enemigo.ry)) {
 				enemigo.hp--;
 				if (enemigo.hp == 0) {
 					enemigo.activo = false;
@@ -333,7 +340,8 @@ struct Player {
 	const int max_municiones = 100;
 	int municiones = 100;
 	std::vector<Disparo> disparos;
-	float r = 1;
+	float rx = 0.6;
+	float ry = 0.4;
 	GLfloat rotx = 0;
 	GLfloat roty = 0;
 
@@ -373,7 +381,9 @@ struct Player {
 		glRotatef(roty, 0, 0, 1);
 		glScalef(0.1, 0.1, 0.1);
 		//glDisable(GL_TEXTURE_2D);
-		//glutSolidCube(1);
+		//glColor3f(1.0, 0, 0);
+		//glutSolidSphere(rx*10,10,10);
+		//glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 		glEnable(GL_LIGHT1);
@@ -394,7 +404,7 @@ struct Player {
 	void calcularColision(struct Enemigo &enemigo) {
 
 		if (enemigo.activo) {
-			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.rx, enemigo.ry)) {
 				if (enemigo.activo) {
 					//exit(1); //Muere el jugador
 					hp -= 25;
@@ -412,7 +422,7 @@ struct Player {
 
 	void calcularColision(struct Asteroide &enemigo) {
 		if (enemigo.activo) {
-			if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
+			if (colisionan(x, y, rx, ry, enemigo.x, enemigo.y, enemigo.r,enemigo.r)) {
 				if (enemigo.activo) {
 					exit(1);
 				}
@@ -422,7 +432,7 @@ struct Player {
 
 	void calcularColision(struct Powerup &powerup) {
 		if (powerup.activo) {
-			if (colisionan(x, y, r, powerup.x, powerup.y, powerup.r)) {
+			if (colisionan(x, y, rx, ry, powerup.x, powerup.y, powerup.r, powerup.r)) {
 				powerup.activo = false;
 				municiones += powerup.municionup;
 				if (municiones > max_municiones) {
@@ -444,13 +454,14 @@ struct Player {
 	}
 
 	void calcularColision(struct DisparoEnemigo &enemigo) {
-		if (colisionan(x, y, r, enemigo.x, enemigo.y, enemigo.r)) {
-			hp -= 25;
+		if (colisionan(x, y, rx,ry, enemigo.x, enemigo.y, enemigo.rx,enemigo.ry)) {
+			hp -= enemigo.daño;
 			hp_length = hp * (limites.right / max_hp);
 			if (hp <= 0) {
 				hp = 0;
 				exit(1);
 			}
+			enemigo.activo = false;
 		}
 
 	}
@@ -651,7 +662,7 @@ void Parallax() {
 	glDisable(GL_ALPHA_TEST);
 }
 
-GLfloat vel_asteroide = 0.0003;
+GLfloat vel_asteroide = 0.0007;
 
 void Display()
 {
@@ -668,10 +679,10 @@ void Display()
 	else {
 
 		if (tiempo - time_begin >= time_fin / 2) {
-			vel_asteroide = 0.0009;
+			vel_asteroide = 0.001;
 		}
-		else if (tiempo - time_begin >= time_fin * 2 / 3) {
-			vel_asteroide = 0.002;
+		else if (tiempo - time_begin >= time_fin * 7 / 10) {
+			vel_asteroide = 0.003;
 		}
 
 		glEnable(GL_TEXTURE_2D);
@@ -745,11 +756,16 @@ void Display()
 				if (tiempo - time_begin > enemigos[i].appear) {
 					enemigos[i].mover(vel_asteroide);
 					enemigos[i].mostrar();
-					enemigos[i].disparar();
+					enemigos[i].disparar(tiempo - time_begin);
 					player.calcularColision(enemigos[i]);
 					for (int n = 0; n < player.disparos.size(); n++) {
 						if (player.disparos[n].activo) {
 							player.disparos[n].calcularColision(enemigos[i]);
+						}
+					}
+					for (int n = 0; n < enemigos[i].disparos.size(); n++) {
+						if (enemigos[i].disparos[n].activo) {
+							player.calcularColision(enemigos[i].disparos[n]);
 						}
 					}
 				}

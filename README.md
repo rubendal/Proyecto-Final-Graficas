@@ -11,16 +11,10 @@ Spheres. Si la nave choca con un asteroide el juego termina (Reemplazar exit() c
 
 * Deben existir por lo menos 3 luces en el escenario. (Hay 1 luz)
 
-* Los asteroides y enemigos deben aparecer de forma aleatoria y avanzarán
-lentamente de derecha a izquierda. La dificultad del nivel debe ser
-incremental (Faltan los enemigos)
-
 * Al llegar al final del nivel se debe mostrar una pantalla de “Ganaste” (Se detecta el final del nivel con el tiempo transcurrido)
 
 * Si la vida del jugador llega a 0 se mostrará una pantalla de “Game Over”. (falta pantalla de game over)
 
-* Habrá naves enemigas que disparan. Las naves enemigos son modelos 3d con
-iluminación y textura (tienen que disparar)
 
 ## Con errores/problemas
 
@@ -61,3 +55,10 @@ materiales se debe mostrar el nivel de daño que tiene la nave enemiga
 
 * Se debe llevar un registro de los enemigos matados en forma de un score en
 pantalla. El score debe ser en texto. (glutbitmapcharacter)
+
+* Habrá naves enemigas que disparan. Las naves enemigos son modelos 3d con
+iluminación y textura
+
+* Los asteroides y enemigos deben aparecer de forma aleatoria y avanzarán
+lentamente de derecha a izquierda. La dificultad del nivel debe ser
+incremental
