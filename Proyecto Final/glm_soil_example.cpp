@@ -97,6 +97,7 @@ struct Powerup {
 		if (activo) {
 			glDisable(GL_LIGHTING);
 			glDisable(GL_LIGHT0);
+			glDisable(GL_LIGHT1);
 			glLoadIdentity();
 			float m = municionup > 0 ? 1.0 : 0;
 			float h = hpup > 0 ? 1.0 : 0;
@@ -152,7 +153,9 @@ struct Enemigo {
 		//glScalef(r, r, r);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, material);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 	}
@@ -203,7 +206,9 @@ struct Asteroide {
 		glScalef(r, r, r);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, material);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, material);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 	}
@@ -232,6 +237,7 @@ struct Disparo {
 		if (activo) {
 			glDisable(GL_LIGHTING);
 			glDisable(GL_LIGHT0);
+			glDisable(GL_LIGHT1);
 			glLoadIdentity();
 			glColor3f(0.0, 1.0, 0.0);
 			glTranslatef(x, y, z);
@@ -330,6 +336,7 @@ struct Player {
 		//glutSolidCube(1);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 		glmDraw(model, GLM_TEXTURE | GLM_SMOOTH | GLM_MATERIAL);
 		glLoadIdentity();
 	}
@@ -428,15 +435,24 @@ void Init()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 	glEnable(GL_LIGHTING);
 
 	GLfloat lDiff[] = { 1.0f,1.0f,1.0f,1.0f };
-	GLfloat lSpec[] = { 1.0f,1.0f,1.0f,1.0f };
+	GLfloat lSpec[] = { 0.0f,0.0f,1.0f,1.0f };
 	GLfloat lpos[] = { 0.0,2.5,0.0,1 };
+
+	GLfloat lDiff1[] = { 1.0f,1.0f,1.0f,1.0f };
+	GLfloat lSpec1[] = { 1.0f,0.0f,0.0f,1.0f };
+	GLfloat lpos1[] = {0.0f,-2.5,1.0,1 };
 
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpec);
 	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
+
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, lDiff1);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, lSpec1);
+	glLightfv(GL_LIGHT1, GL_POSITION, lpos1);
 	
 
 	tex1 = SOIL_load_OGL_texture(
@@ -689,6 +705,7 @@ void Display()
 
 		GLfloat lDiff2[] = { 1.0f,1.0f,1.0f,1.0f };
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, lDiff2);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, lDiff2);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 		GLfloat mat[] = { 1.0f,1.0f,1.0f,1.0f };
